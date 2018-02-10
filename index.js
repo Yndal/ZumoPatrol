@@ -7,6 +7,7 @@ var path = require('path');
 var spawn = require('child_process').spawn;
 const raspi = require('raspi');
 const gpio = require('raspi-gpio');
+const Serial = require('raspi-serial').Serial;
 var proc;
 
 
@@ -45,7 +46,27 @@ process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
  * raspi config - Start     *
  ****************************/
 
-raspi
+raspi.init(() => {
+	const input = new gpio.DigitalInput({
+		pin: 'P1-3',
+		pullResistor: gpio.PULL_UP
+		});
+	
+	const output = new gpio.DigitalOutput('P1-5');
+	output.write(input.read());
+
+
+
+	var serial = new Serial();
+	serial.open(() => {
+		serial.write('Hello from raspi-serial');
+		serial.on('data', (data) => {
+			process.stdout.write(data);
+			});
+		});
+	});
+startHeartbeat();
+
 
 /****************************
  * raspi-config - End       *
@@ -113,4 +134,10 @@ function startStreaming(io) {
 	}
 }
 
+var heartbeatInterval;
+function startHeartbeat(){
+	heartbeatInterval = setInterval(function(){
+		console.log("Implement heartbeat");
+	}, 200);
 
+}
